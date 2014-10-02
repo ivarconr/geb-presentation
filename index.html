@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geb - presentasjon</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+
+      .gray {
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Geb (pronounced “jeb”)
+
+_very groovy browser automation… web testing, screen scraping and more_
+_http://www.gebish.org/_
+
+---
+
+# Agenda
+
+1. ..
+2. ..
+3. ...
+
+---
+# Introduction
+
+- Automating the interaction between web browsers and web content
+- Acceptance Testing Web Applications
+- Screen scraping
+
+
+---
+# Example
+
+    import geb.Browser
+     
+    Browser.drive {
+        go "http://myapp.com/login"
+         
+        assert $("h1").text() == "Please Login"
+         
+        $("form.login").with {
+            username = "admin"
+            password = "password"
+            login().click()
+        }
+         
+        assert $("h1").text() == "Admin Section"
+    }
+
+---
+# Technology 
+
+- WebDriver
+- Groovy
+- Spock
+- JUnit/testNG
+- jQuery-like content selection
+
+---
+# WebDriver
+
+- Geb builds on the WebDriver browser automation librar
+- Geb can work with any browser that WebDriver can
+- Geb provides an abstraction layer, but you can access WebDriver directly
+- Geb never talks to the actual browser.
+
+<br />
+.gray[You need specific driver for each browser you want to work with:]
+
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-firefox-driver</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+
+    </textarea>
+    <script src="scripts/remark-latest.min.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
