@@ -72,7 +72,7 @@ _http://www.gebish.org/_
 - Groovy
 - Spock
 - JUnit/testNG
-- jQuery-like content selection
+- Navigator API (jQuery-like content selection)
 
 ---
 # WebDriver
@@ -90,6 +90,29 @@ _http://www.gebish.org/_
       <artifactId>selenium-firefox-driver</artifactId>
       <version>2.20.0</version>
     </dependency>
+
+---
+# Navigator API
+
+- Inspired by jQuery.
+- Content is selected through the $ function, which returns a Navigator object
+- Makes it super easy to select content
+
+
+    // match all 'div' elements on the page
+    $("div")
+     
+    // match the first 'div' element on the page
+    $("div", 0)
+     
+    // match all 'div' elements with a title attribute value of 'section'
+    $("div", title: "section")
+    
+    // The parent of the first paragraph
+    $("p", 0).parent()
+
+http://www.gebish.org/manual/current/intro.html#the_jquery_ish_navigator_api
+
 
     </textarea>
     <script src="scripts/remark-latest.min.js" type="text/javascript">
