@@ -51,11 +51,14 @@ _very groovy browser automation_
 # Agenda
 
 1. Introduction to Geb
-2. Page objects
-3. Module objects
-4. Content DSL
-5. Multiple Environments
-6. Our project-setup 
+ - WebDriver
+ - Test framework integrations
+ - Navigation API
+ - Page objects
+ - Module objects
+ - Content DSL
+ - Multiple Environments
+2. Our project-setup 
 
 ---
 # Introduction
@@ -338,10 +341,11 @@ environments {
 
 
 ---
-# FINN.no :: http://testreports.finn.no 
-- Jeg har laget  en JUnit-listner som integrerer Geb med testreports
-- Gir deg status og screenshots fra hver test
-- Integreres f.eks ved å configurere surfire-plugin i maven
+# FINN.no :: Testreports
+- JUnit-listner that intgrates Geb with http://testreports.finn.no 
+- Support @Tags annotation
+- Gives status and screenshots for each test
+- Easy setup with the maven-surfire-plugin
 
 ```xml
 <plugin>
