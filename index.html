@@ -18,6 +18,21 @@
       .gray {
         color: gray;
       }
+
+      .bottom {
+        position: absolute;
+        bottom: 10px;
+      }
+      .left {
+        left: 20px;
+      }
+      .box {
+        border: 1px solid black;
+        padding: 5px;
+        background-color: #EDF4F5;
+        border-radius: 5px;
+        box-shadow: 5px 10px 5px #888888;
+      }
     </style>
   </head>
   <body>
@@ -25,18 +40,22 @@
 
 class: center, middle
 
-# Geb (pronounced “jeb”)
+# Geb 
+_very groovy browser automation_ 
 
-_very groovy browser automation… web testing, screen scraping and more_
-_http://www.gebish.org/_
+.bottom.left[http://www.gebish.org]
+
 
 ---
 
 # Agenda
 
-1. ..
-2. ..
-3. ...
+1. Introduction to Geb
+2. Page objects
+3. Module objects
+4. Content DSL
+5. Multiple Environments
+6. Our project-setup 
 
 ---
 # Introduction
@@ -44,35 +63,37 @@ _http://www.gebish.org/_
 - Automating the interaction between web browsers and web content
 - Acceptance Testing Web Applications
 - Screen scraping
+- Great documentation: http://www.gebish.org/manual/current/
 
 
 ---
 # Example
 
-    import geb.Browser
+```groovy
+import geb.Browser
+ 
+Browser.drive {
+    go "http://myapp.com/login"
      
-    Browser.drive {
-        go "http://myapp.com/login"
-         
-        assert $("h1").text() == "Please Login"
-         
-        $("form.login").with {
-            username = "admin"
-            password = "password"
-            login().click()
-        }
-         
-        assert $("h1").text() == "Admin Section"
+    assert $("h1").text() == "Please Login"
+     
+    $("form.login").with {
+        username = "admin"
+        password = "password"
+        login().click()
     }
+     
+    assert $("h1").text() == "Admin Section"
+}
+```
 
 ---
 # Technology 
 
-- WebDriver
-- Groovy
-- Spock
-- JUnit/testNG
-- Navigator API (jQuery-like content selection)
+- WebDriver (.gray[support many browsers])
+- Groovy (.gray[remove java-boilerplate])
+- Spock, JUnit or TestNG (.gray[easy to integrate with IDE and build systems])
+- Navigator API (.gray[jQuery-like content selection])
 
 ---
 # WebDriver
@@ -85,40 +106,279 @@ _http://www.gebish.org/_
 <br />
 .gray[You need specific driver for each browser you want to work with:]
 
-    <dependency>
-      <groupId>org.seleniumhq.selenium</groupId>
-      <artifactId>selenium-firefox-driver</artifactId>
-      <version>2.20.0</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.seleniumhq.selenium</groupId>
+  <artifactId>selenium-firefox-driver</artifactId>
+  <version>2.20.0</version>
+</dependency>
+```
+
+---
+# Test framework integration
+- Geb works with existing popular tools like Spock, JUnit, TestNG and Cucumber. 
+- You pick what you like; but Geb encurages Spock.
+- **Because it builds on existing frameworks it is easy to execute with your IDE, build tools (maven), etc**
+
+---
+# Spock example
+
+```groovy
+import geb.spock.GebSpec
+ 
+class GoogleWikipediaSpec extends GebSpec {
+ 
+    def "first result for wikipedia search should be wikipedia"() {
+        given:
+        to GoogleHomePage
+ 
+        expect:
+        at GoogleHomePage
+ 
+        when:
+        search.field.value("wikipedia")
+ 
+        then:
+        waitFor { at GoogleResultsPage }
+    }
+}
+```
+
+.bottom.left[More about Spock @ https://code.google.com/p/spock/]
 
 ---
 # Navigator API
 
 - Inspired by jQuery.
-- Content is selected through the $ function, which returns a Navigator object
+- Content is selected via the $ function, which returns a Navigator object
 - Makes it super easy to select content
 
+```groovy
+// match all 'div' elements on the page
+$("div")
+ 
+// match the first 'div' element on the page
+$("div", 0)
+ 
+// match all 'div' elements with a title attribute value of 'section'
+$("div", title: "section")
 
-    // match all 'div' elements on the page
-    $("div")
-     
-    // match the first 'div' element on the page
-    $("div", 0)
-     
-    // match all 'div' elements with a title attribute value of 'section'
-    $("div", title: "section")
-    
-    // The parent of the first paragraph
-    $("p", 0).parent()
+// The parent of the first paragraph
+$("p", 0).parent()
 
-http://www.gebish.org/manual/current/intro.html#the_jquery_ish_navigator_api
+//<div>foo</div>
+$("div", text: "foo")
+
+// Using patterns
+$("p", text: ~/p./).size() == 2
+$("p", text: startsWith("p")).size() == 2
+```
+
+.bottom.left[http://www.gebish.org/manual/current/intro.html#the_jquery_ish_navigator_api]
+
+
+---
+# Page Objects
+- Less fragile code with better abstractions and modelling
+- Promotes resuse
+- Makes it easier to write tests
+- Pages (and modules) can be arranged in inheritance hierarchies.
+
+<br /><br />
+
+.box[
+  Within your web app’s UI there are areas that your tests interact with. A Page Object simply models these as objects within the test code. This reduces the amount of duplicated code and means that if the UI changes, the fix need only be applied in one place. ([webdriver...](http://code.google.com/p/selenium/wiki/PageObjects))
+]
+
+
+---
+# Page Objects: example
+
+```groovy
+class LoginPage extends Page {
+    static url = "/login"
+    static at = { title == "Login to our super page" }
+    static content = {
+        loginButton(to: AdminPage) { $("input", type: "submit", name: "login") }
+    }
+}
+ 
+class AdminPage extends Page {
+    static at = {
+        assert $("h1").text() == "Admin Page"
+    }
+}
+```
+```groovy
+Browser.drive {
+    to LoginPage
+    loginButton.click()
+    at AdminPage
+}
+```
+
+- _to_ changes the browser’s page instance.
+- _click_ on login-button changes page to the "Admin page"
+- _at_ explicitly asserts that we are on the expected page
+
+---
+# Module Objects
+
+- Reusable fragments that can be used across pages
+- Useful for modelling things like UI widgets that are used across multiple pages
+- We can define a Navigator context when including the module in a Page. Module will then only see "its own part" of the dom via the navigator api
+
+---
+# Module Objects: example
+
+```groovy
+class ExampleModule extends Module {
+    static content = {
+        button { $("input", type: "submit") }
+    }
+}
+```
+```groovy
+class ExamplePage extends Page {
+    static content = {
+        theModule { module ExampleModule }
+    }
+}
+```
+
+```groovy
+Browser.drive {
+    to ExamplePage
+    theModule.button.click()
+}
+```
+
+
+---
+# Content DSL
+
+- Content definitions can build upon each other.
+- Content definitions are actually templates.
+
+```groovy
+class GoogleResultsPage extends Page {
+    static content = {
+        results { $("li.g") }
+        result { i -> results[i] }
+        resultLink { i -> result(i).find("a.l", 0) }
+        firstResultLink { resultLink(0) }
+    }
+}
+```
+
+### Optional Content
+
+```groovy
+class OptionalPage extends Page {
+    static content = {
+        errorMsg(required: false) { $("p.errorMsg") }
+    }
+}
+```
+
+---
+# Dynamic content
+
+```groovy
+class DynamicPage extends Page {
+    static content = {
+        linkTotrigger {$("a"}
+        awesomeContainer(required: false) { $("div.awesome") }
+    }
+}
+```
+
+```groovy
+Browser.drive {
+    to DynamicPage
+    linkTotrigger.click()
+    waitFor { awesomeContainer }
+}
+```
+
+- By default, it will look for it every 100ms for 5s before giving up.
+
+
+---
+# Multiple Environments
+- The Groovy ConfigSlurper mechanism has built in support for environment sensitive configuration
+- **geb.env** system property to determine the environment to use
+
+```
+remoteDriver = {..}
+driver = { new FirefoxDriver() }
+baseUrl = "http://iad.finn.no:3002/"
+iadUrl  = "http://dev.finn.no"
+
+environments {
+    'dev' {
+        baseUrl = "http://dev.finn.no/talent/"
+        iadUrl  = "http://dev.finn.no"
+        driver = remoteDriver
+    }
+    'prod' {
+        baseUrl = "http://www.finn.no/talent/"
+        iadUrl  = "http://www.finn.no"
+        driver = remoteDriver
+    }
+}
+```
+
+---
+# Our project-setup 
+- Kjører tester lokalt mot lokal server 
+- Kan kjøre tester som en del av maven-bygget 
+ - _men valgt å ikke gjøre dette siden vi er avhengig av finndev-login-tjensten_
+- Sparker i gang en testkjøring mot dev straks en ny artifakt er deployet i dev. 
+
+
+---
+# FINN.no :: http://testreports.finn.no 
+- Jeg har laget  en JUnit-listner som integrerer Geb med testreports
+- Gir deg status og screenshots fra hver test
+- Integreres f.eks ved å configurere surfire-plugin i maven
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>2.16</version>
+    <configuration>
+        <includes>
+            <include>**/*Spec.*</include>
+        </includes>
+        <systemPropertyVariables>
+            <geb.build.reportsDir>target/test-reports/geb</geb.build.reportsDir>
+            <report.projectName>${artifactId}</report.projectName>
+        </systemPropertyVariables>
+        <properties>
+            <property>
+                <name>listener</name>
+                <value>no.finntech.test.report.runner.GebTestReportRunListener</value>
+            </property>
+        </properties>
+    </configuration>
+</plugin>
+```
+
+---
+# Demo time
 
 
     </textarea>
     <script src="scripts/remark-latest.min.js" type="text/javascript">
     </script>
     <script type="text/javascript">
-      var slideshow = remark.create();
+      var slideshow = remark.create({
+        highlightLanguage: 'groovy',
+        highlightStyle: 'monokai'
+
+      });
     </script>
   </body>
 </html>
